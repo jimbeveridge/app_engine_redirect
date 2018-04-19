@@ -1,7 +1,17 @@
-## Simple PHP script for .htaccess-style redirects in App Engine
+## Simple PHP script for redirects in App Engine
 
 Maintainer: jimbe@google.com
 
+## Configure
+
+Edit redirect.php and modify the `$redirects` map as desired.
+
 ## Run
 
-appcfg.py -R -A tq-fx-solutions update app.yaml
+```
+$ gcloud app deploy --project saline-nachos-27325
+```
+
+## Notes
+
+The use of PHP was just expedient.

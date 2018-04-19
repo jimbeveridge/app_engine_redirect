@@ -1,5 +1,18 @@
 <?php
 
+# Copyright 2018 Google LLC.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 if (isset($_SERVER['REQUEST_URI'])) {
   $redirect = new RedirectUrls();
@@ -11,12 +24,17 @@ if (isset($_SERVER['REQUEST_URI'])) {
 
 class RedirectUrls {
 
+  # The keys on the left will match the beginning of any incoming URL.
+  # The remainder will be added to the URL on the right. If the URL on
+  #  the right includes a scheme or host, that will be replaced.
+  # Given the example redirects below:
+  # http://www.trilobyte.com/docs/catid/56 would become http://example.atlassian.net/CAT/56
+  # http://www.example.com/docs/rel_catid/56 would become http://www.example.com/CAT-56
+  # The code is smart enough to NOT match /docs/catid5/val based on the first key below.
+  # There must either be a slash or nothing appearing after the key.
   public static $redirects = [
-    # Equivalent .htaccess lines
-    #>Redirect Permanent /Downloads https://storage.googleapis.com/example/Downloads
-    #>Redirect Permanent /Manual http://example.atlassian.net/
-    '/docs/Manual'     => 'http://example.atlassian.net/CAT-',
-    '/Downloads'       => 'https://storage.googleapis.com/example/Downloads'
+    '/docs/catid'     => 'http://example.atlassian.net/CAT/',
+    '/docs/rel_catid'     => '/CAT-',
   ];
 
   public function getRedirectUrl($uri) {
@@ -35,26 +53,25 @@ class RedirectUrls {
         continue;
 
       // Strip out the matching part and leave the remainder
-      $path = substr($path, $key_len);
-      if ($path === FALSE) $path = "";
+      $suffix = substr($path, $key_len);
+      if ($suffix === FALSE) $suffix = "";
 
       // The remainder must be empty or must start a new path component
-      if ($path != "" && substr($path,0, 1) != "/")
+      // This is so we don't accidentally match substrings.
+      if ($suffix != "" && substr($suffix,0, 1) != "/")
         continue;
 
-      $redirect = parse_url($value);
+      $parsed_location = parse_url($value);
 
-      // Malformed redirect URL?, or just a plain host?
-      //if (!isset($redirect['path'])) $redirect['path'] = "/";
-
-      $req['path'] = $redirect['path'] . $path;
+      $req['path'] = $parsed_location['path'] . substr($suffix, 1);
 
       $overrides = [ 'scheme', 'host', 'query' ];
       foreach ($overrides as $override) {
-        if (isset($redirect[$override])) {
-          $req[$override] = $redirect[$override];
+        if (isset($parsed_location[$override])) {
+          $req[$override] = $parsed_location[$override];
         }
       }
+      print_r($req);
 
       break;
     }

@@ -1,0 +1,19 @@
+runtime: php55
+api_version: 1
+threadsafe: yes
+service: redirect
+
+skip_files:
+- ^.*/.git
+- ^(.*/)?.*\.htaccess
+- ^(.*/)?.*~
+
+handlers:
+- url: /$
+  script: htdocs/index.php
+
+- url: /(Downloads|Manual)/.*
+  script: redirect.php
+
+- url: /.*
+  script: redirect.php

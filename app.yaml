@@ -9,11 +9,5 @@ skip_files:
 - ^(.*/)?.*~
 
 handlers:
-- url: /$
-  script: htdocs/index.php
-
-- url: /(Downloads|Manual)/.*
-  script: redirect.php
-
 - url: /.*
   script: redirect.php
